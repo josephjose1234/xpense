@@ -46,6 +46,7 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   String opR = '+';
+  double Total=0.0;
   TextEditingController _itemController = TextEditingController();
   TextEditingController _amountController = TextEditingController();
   List<Transaction> TransList = [];
@@ -54,7 +55,30 @@ class _HomepageState extends State<Homepage> {
   void initState() {
     super.initState();
     _loadTransactions();
+    someFunction();
   }
+  
+  Future<void> someFunction() async {
+  Total = await sumAmounts();
+  // Now, Total holds the sum as a double
+  // You can use Total wherever you need the sum
+}
+  //SUM FUNCTON
+Future<double> sumAmounts() async {
+  final db = await widget.DHome;
+  final result = await db.rawQuery('SELECT SUM(CAST(amount AS REAL)) as total FROM transact');
+  
+  if (result.isNotEmpty) {
+    final total = result.first['total'];
+    if (total != null) {
+      return total as double; // Ensure 'total' is not null before casting to double
+    }
+  }
+  
+  // Handle cases where there are no results or the 'total' is null.
+  return 0.0; // You can return a default value or handle it differently based on your requirements.
+}
+
 
   // READ operation
   Future<void> _loadTransactions() async {
@@ -81,6 +105,7 @@ class _HomepageState extends State<Homepage> {
       transaction.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    someFunction();
   }
 // DELETE operation
 Future<void> _deleteTransaction(int index)async{
@@ -92,6 +117,7 @@ Future<void> _deleteTransaction(int index)async{
     whereArgs: [transToDelete.id],
   );
   _loadTransactions();
+  someFunction();
 }
   @override
   Widget build(BuildContext context) {
@@ -99,7 +125,7 @@ Future<void> _deleteTransaction(int index)async{
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         //forTotal
-        Container(child: Text('TOTAL')),
+        Container(child: Text(Total.toString())),
         //List
         Expanded(
             child: ListView.builder(
@@ -113,7 +139,9 @@ Future<void> _deleteTransaction(int index)async{
                       Text(transList.operator),
                       GestureDetector(
                         onTap:() {
-                          _deleteTransaction(index);
+                          setState(() {
+                            _deleteTransaction(index);
+                          });
                         },
                         child: Text('DELETE'),
                       ),
@@ -158,10 +186,13 @@ Future<void> _deleteTransaction(int index)async{
                       operator: opR,
                       item: _itemController.text,
                       amount: _amountController.text);
-                  await _insertTransaction(newTransaction);
+                       await _insertTransaction(newTransaction);
+                      setState(() {
                   _loadTransactions();
+                  someFunction();
                   _amountController.clear();
                   _itemController.clear();
+                      });
                 }
               },
               child: Text('save'),
