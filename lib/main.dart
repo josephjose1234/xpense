@@ -60,8 +60,8 @@ class _HomepageState extends State<Homepage> {
 
   Future<void> _initializeTotal() async {
     final db = await widget.DHome;
-     Total = await getLastBal(db);
-   // Total = await balFunction();
+    Total = await getLastBal(db);
+    // Total = await balFunction();
     setState(() {});
   }
 
@@ -193,24 +193,40 @@ class _HomepageState extends State<Homepage> {
                 int CBal =
                     int.parse(_amountController.text); //converting text to INT
                 int prevBal = await getLastBal(db); //gettingLastBalance
-                
-                int newBal = prevBal + CBal; //Adding Previous Balance to the Current Balance
+                // int newBal = prevBal + CBal; //Adding Previous Balance to the Current Balance
                 if (_amountController.text.isNotEmpty ||
                     _itemController.text.isNotEmpty) {
-                  final newTransaction = Transaction(
-                    operator: opR,
-                    item: _itemController.text,
-                    amount: _amountController.text,
-                    Bal: newBal, //find previous balance here???
-                  );
-                    
-                  await _insertTransaction(newTransaction);
-                  await _initializeTotal();
-                  setState(() {
-                    _loadTransactions();
-                    _amountController.clear();
-                    _itemController.clear();
-                  });
+                  if (opR == '+') {
+                    int newBal = prevBal + CBal;
+                    final newTransaction = Transaction(
+                      operator: opR,
+                      item: _itemController.text,
+                      amount: _amountController.text,
+                      Bal: newBal, //find previous balance here???
+                    );
+                    await _insertTransaction(newTransaction);
+                    await _initializeTotal();
+                    setState(() {
+                      _loadTransactions();
+                      _amountController.clear();
+                      _itemController.clear();
+                    });
+                  } else if (opR == '-') {
+                    int newBal = prevBal - CBal;
+                    final newTransaction = Transaction(
+                      operator: opR,
+                      item: _itemController.text,
+                      amount: _amountController.text,
+                      Bal: newBal, //find previous balance here???
+                    );
+                    await _insertTransaction(newTransaction);
+                    await _initializeTotal();
+                    setState(() {
+                      _loadTransactions();
+                      _amountController.clear();
+                      _itemController.clear();
+                    });
+                  }
                 }
               },
               child: Text('save'),
