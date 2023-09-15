@@ -10,7 +10,7 @@ void main() async {
     join(await getDatabasesPath(), 'transact.db'),
     onCreate: (db, version) {
       return db.execute(
-        'CREATE TABLE transact(id INTEGER PRIMARY KEY AUTOINCREMENT , operator text, item TEXT,amount TEXT )',
+        'CREATE TABLE transact(id INTEGER PRIMARY KEY AUTOINCREMENT , operator text, item TEXT,amount TEXT ,Bal INTEGER)',
       );
     },
     version: 1,
@@ -46,7 +46,7 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   String opR = '+';
-  double Total=0.0;
+  int Total = 0;
   TextEditingController _itemController = TextEditingController();
   TextEditingController _amountController = TextEditingController();
   List<Transaction> TransList = [];
@@ -55,46 +55,53 @@ class _HomepageState extends State<Homepage> {
   void initState() {
     super.initState();
     _loadTransactions();
-    someFunction();
+    _initializeTotal();
   }
-  
-  Future<void> someFunction() async {
-  Total = await sumAmounts();
-  // Now, Total holds the sum as a double
-  // You can use Total wherever you need the sum
-}
-  //SUM FUNCTON
-Future<double> sumAmounts() async {
-  final db = await widget.DHome;
-  final result = await db.rawQuery('SELECT SUM(CAST(amount AS REAL)) as total FROM transact');
-  
-  if (result.isNotEmpty) {
-    final total = result.first['total'];
-    if (total != null) {
-      return total as double; // Ensure 'total' is not null before casting to double
-    }
-  }
-  
-  // Handle cases where there are no results or the 'total' is null.
-  return 0.0; // You can return a default value or handle it differently based on your requirements.
-}
 
+  Future<void> _initializeTotal() async {
+    final db = await widget.DHome;
+     Total = await getLastBal(db);
+   // Total = await balFunction();
+    setState(() {});
+  }
 
   // READ operation
   Future<void> _loadTransactions() async {
     final db = await widget.DHome;
     final List<Map<String, dynamic>> maps = await db.query('transact');
-
+    print(maps.toString());
     setState(() {
       TransList = List.generate(maps.length, (index) {
         return Transaction(
-          id: maps[index]['id'],
-          operator: maps[index]['operator'],
-          item: maps[index]['item'],
-          amount: maps[index]['amount'],
-        );
+            id: maps[index]['id'],
+            operator: maps[index]['operator'],
+            item: maps[index]['item'],
+            amount: maps[index]['amount'],
+            Bal: maps[index]['Bal']);
       });
     });
+  }
+
+// Balance
+// getting the last balnce from the database
+  Future<int> getLastBal(Database db) async {
+    final List<Map<String, dynamic>> result = await db.rawQuery(
+      'SELECT Bal FROM transact ORDER BY id DESC LIMIT 1',
+    );
+
+    if (result.isNotEmpty) {
+      return result.first['Bal'] as int;
+    } else {
+      // Handle the case when the table is empty
+      return 0; // Or another default value that makes sense for your use case
+    }
+  }
+
+  balFunction() async {
+    // assinging the balnce as TOTAl
+    final db = await widget.DHome;
+    Total = await getLastBal(db);
+    return Total;
   }
 
 // CREATE operation
@@ -105,26 +112,27 @@ Future<double> sumAmounts() async {
       transaction.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    someFunction();
   }
+
 // DELETE operation
-Future<void> _deleteTransaction(int index)async{
-  final Database db = await widget.DHome;
-  final transToDelete= TransList[index];
-  await db.delete(
-    'transact',
-    where:'id = ?',
-    whereArgs: [transToDelete.id],
-  );
-  _loadTransactions();
-  someFunction();
-}
+  Future<void> _deleteTransaction(int index) async {
+    final Database db = await widget.DHome;
+    final transToDelete = TransList[index];
+    await db.delete(
+      'transact',
+      where: 'id = ?',
+      whereArgs: [transToDelete.id],
+    );
+    _loadTransactions();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         //forTotal
+
         Container(child: Text(Total.toString())),
         //List
         Expanded(
@@ -137,8 +145,9 @@ Future<void> _deleteTransaction(int index)async{
                       Text(transList.amount),
                       Text(transList.item),
                       Text(transList.operator),
+                      Text('BAl '),
                       GestureDetector(
-                        onTap:() {
+                        onTap: () {
                           setState(() {
                             _deleteTransaction(index);
                           });
@@ -180,19 +189,28 @@ Future<void> _deleteTransaction(int index)async{
             ),
             ElevatedButton(
               onPressed: () async {
+                final Database db = await widget.DHome;
+                int CBal =
+                    int.parse(_amountController.text); //converting text to INT
+                int prevBal = await getLastBal(db); //gettingLastBalance
+                
+                int newBal = prevBal + CBal; //Adding Previous Balance to the Current Balance
                 if (_amountController.text.isNotEmpty ||
                     _itemController.text.isNotEmpty) {
                   final newTransaction = Transaction(
-                      operator: opR,
-                      item: _itemController.text,
-                      amount: _amountController.text);
-                       await _insertTransaction(newTransaction);
-                      setState(() {
-                  _loadTransactions();
-                  someFunction();
-                  _amountController.clear();
-                  _itemController.clear();
-                      });
+                    operator: opR,
+                    item: _itemController.text,
+                    amount: _amountController.text,
+                    Bal: newBal, //find previous balance here???
+                  );
+                    
+                  await _insertTransaction(newTransaction);
+                  await _initializeTotal();
+                  setState(() {
+                    _loadTransactions();
+                    _amountController.clear();
+                    _itemController.clear();
+                  });
                 }
               },
               child: Text('save'),
@@ -209,12 +227,14 @@ class Transaction {
   final String operator;
   final String item;
   final String amount;
+  final int Bal;
   Transaction(
       {this.id,
       required this.operator,
       required this.item,
-      required this.amount});
+      required this.amount,
+      required this.Bal});
   Map<String, dynamic> toMap() {
-    return {'operator': operator, 'item': item, 'amount': amount};
+    return {'operator': operator, 'item': item, 'amount': amount, 'Bal': Bal};
   }
 }
