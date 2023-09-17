@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 // UPDATE TRANSACTION FEATURE
@@ -21,65 +22,44 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  final Future<Database> DBase;
   MyApp({required this.DBase});
+
+  final Future<Database> DBase;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Xpense'),
+      home: SafeArea(
+        child: Scaffold(
+          body: Homepage(DHome: DBase),
         ),
-        body: Homepage(DHome: DBase),
       ),
     );
   }
 }
 
 class Homepage extends StatefulWidget {
-  final Future<Database> DHome;
   const Homepage({required this.DHome});
+
+  final Future<Database> DHome;
 
   @override
   State<Homepage> createState() => _HomepageState();
 }
 
 class _HomepageState extends State<Homepage> {
-  String opR = '+';
   int Total = 0;
-  TextEditingController _itemController = TextEditingController();
-  TextEditingController _amountController = TextEditingController();
   List<Transaction> TransList = [];
+  String opR = '+';
+  Icon OPr = Icon(Icons.add, size: 30);
+  TextEditingController _amountController = TextEditingController();
+  TextEditingController _itemController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadTransactions();
     _initializeTotal();
-  }
-
-  Future<void> _initializeTotal() async {
-    final db = await widget.DHome;
-    Total = await getLastBal(db);
-    // Total = await balFunction();
-    setState(() {});
-  }
-
-  // READ operation
-  Future<void> _loadTransactions() async {
-    final db = await widget.DHome;
-    final List<Map<String, dynamic>> maps = await db.query('transact');
-    print(maps.toString());
-    setState(() {
-      TransList = List.generate(maps.length, (index) {
-        return Transaction(
-            id: maps[index]['id'],
-            operator: maps[index]['operator'],
-            item: maps[index]['item'],
-            amount: maps[index]['amount'],
-            Bal: maps[index]['Bal']);
-      });
-    });
   }
 
 // Balance
@@ -104,6 +84,31 @@ class _HomepageState extends State<Homepage> {
     return Total;
   }
 
+  Future<void> _initializeTotal() async {
+    final db = await widget.DHome;
+    Total = await getLastBal(db);
+    // Total = await balFunction();
+    setState(() {});
+  }
+
+  // READ operation
+  Future<void> _loadTransactions() async {
+    final db = await widget.DHome;
+    final List<Map<String, dynamic>> maps = await db.query('transact');
+    print(maps.toString());
+    
+    setState(() {
+      TransList = List.generate(maps.length, (index) {
+        return Transaction(
+            id: maps[index]['id'],
+            operator: maps[index]['operator'],
+            item: maps[index]['item'],
+            amount: maps[index]['amount'],
+            Bal: maps[index]['Bal']);
+      });
+    });
+  }
+
 // CREATE operation
   Future<void> _insertTransaction(Transaction transaction) async {
     final db = await widget.DHome;
@@ -124,112 +129,244 @@ class _HomepageState extends State<Homepage> {
       whereArgs: [transToDelete.id],
     );
     _loadTransactions();
+    balFunction();
   }
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+      ),
+    );
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        //forTotal
+        // AppBar
+        Container(
+          margin: EdgeInsets.all(20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(
+                Icons.menu,
+                size: 40,
+                color: Colors.blue,
+              ),
+              Container(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Xpense',
+                  style: TextStyle(
+                    fontSize: 50,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.search,
+                size: 40,
+                color: Colors.blue,
+              ),
+            ],
+          ),
+        ),
+        Container(
+          width: double.maxFinite,
+          height: 50,
+          margin: EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: Color.fromRGBO(0, 0, 255, 0.25),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(
+              '₹ ${Total.toString()}',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
 
-        Container(child: Text(Total.toString())),
         //List
         Expanded(
             child: ListView.builder(
                 itemCount: TransList.length,
                 itemBuilder: (context, index) {
                   final transList = TransList[index];
-                  return Container(
-                    child: Column(children: [
-                      Text(transList.amount),
-                      Text(transList.item),
-                      Text(transList.operator),
-                      Text('BAl '),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _deleteTransaction(index);
-                          });
+                  return GestureDetector(
+                    onLongPress: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Icon(
+                              Icons.delete,
+                              size: 50,
+                              color: Colors.red,
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context)
+                                        .pop(); // Close the dialog
+                                  },
+                                  child: Icon(Icons.close_sharp, size: 30)),
+                              TextButton(
+                                onPressed: () {
+                                  // Delete the transaction here
+                                  _deleteTransaction(index);
+                                  Navigator.of(context)
+                                      .pop(); // Close the dialog
+                                },
+                                child: Icon(Icons.check_rounded, size: 30),
+                              ),
+                            ],
+                          );
                         },
-                        child: Text('DELETE'),
+                      );
+                    },
+                    child: Container(
+                      margin: EdgeInsets.all(5),
+                      padding: EdgeInsets.fromLTRB(25, 5, 5, 5),
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Color.fromRGBO(0, 0, 255, 0.25),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    ]),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              child: Text(
+                                transList.item,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    transList.operator,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${transList.amount} ₹',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ]),
+                    ),
                   );
                 })),
 
         //addItems
         Container(
+          height: 50,
+          margin: EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: Color.fromRGBO(0, 0, 255, 0.25),
+            borderRadius: BorderRadius.circular(10),
+          ),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Container(
-              margin: EdgeInsets.all(20),
-              child: GestureDetector(
-                child: Text(opR, style: TextStyle(fontSize: 30)),
-                onTap: () {
-                  setState(() {
-                    opR == '+' ? opR = '-' : opR = '+';
-                  });
-                },
+              height: 100,
+              width: 40,
+              margin: EdgeInsets.all(5),
+              child: Center(
+                child: GestureDetector(
+                  child: OPr,
+                  onTap: () {
+                    setState(() {
+                      opR == '+'
+                          ? {opR = '-', OPr = Icon(Icons.remove)}
+                          : {opR = '+', OPr = Icon(Icons.add)};
+                    });
+                  },
+                ),
               ),
             ),
             Expanded(
               child: Container(
-                  child: TextField(
-                controller: _itemController,
-                decoration: InputDecoration(labelText: 'item'),
-              )),
+                child: TextField(
+                  controller: _itemController,
+                  decoration: InputDecoration(labelText: 'item'),
+                ),
+              ),
             ),
             Expanded(
               child: Container(
-                  child: TextField(
-                controller: _amountController,
-                decoration: InputDecoration(labelText: 'Amount'),
-              )),
+                child: TextField(
+                  controller: _amountController,
+                  decoration: InputDecoration(labelText: '₹₹₹₹'),
+                ),
+              ),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                final Database db = await widget.DHome;
-                int CBal =
-                    int.parse(_amountController.text); //converting text to INT
-                int prevBal = await getLastBal(db); //gettingLastBalance
-                // int newBal = prevBal + CBal; //Adding Previous Balance to the Current Balance
-                if (_amountController.text.isNotEmpty ||
-                    _itemController.text.isNotEmpty) {
-                  if (opR == '+') {
-                    int newBal = prevBal + CBal;
-                    final newTransaction = Transaction(
-                      operator: opR,
-                      item: _itemController.text,
-                      amount: _amountController.text,
-                      Bal: newBal, //find previous balance here???
-                    );
-                    await _insertTransaction(newTransaction);
-                    await _initializeTotal();
-                    setState(() {
-                      _loadTransactions();
-                      _amountController.clear();
-                      _itemController.clear();
-                    });
-                  } else if (opR == '-') {
-                    int newBal = prevBal - CBal;
-                    final newTransaction = Transaction(
-                      operator: opR,
-                      item: _itemController.text,
-                      amount: _amountController.text,
-                      Bal: newBal, //find previous balance here???
-                    );
-                    await _insertTransaction(newTransaction);
-                    await _initializeTotal();
-                    setState(() {
-                      _loadTransactions();
-                      _amountController.clear();
-                      _itemController.clear();
-                    });
+            Container(
+              margin: EdgeInsets.all(10),
+              child: GestureDetector(
+                onTap: () async {
+                  final Database db = await widget.DHome;
+                  int CBal = int.parse(
+                      _amountController.text); //converting text to INT
+                  int prevBal = await getLastBal(db); //gettingLastBalance
+                  // int newBal = prevBal + CBal; //Adding Previous Balance to the Current Balance
+                  if (_amountController.text.isNotEmpty ||
+                      _itemController.text.isNotEmpty) {
+                    if (opR == '+') {
+                      int newBal = prevBal + CBal;
+                      final newTransaction = Transaction(
+                        operator: opR,
+                        item: _itemController.text,
+                        amount: _amountController.text,
+                        Bal: newBal, //find previous balance here???
+                      );
+                      await _insertTransaction(newTransaction);
+                      await _initializeTotal();
+                      setState(() {
+                        _loadTransactions();
+                        _amountController.clear();
+                        _itemController.clear();
+                      });
+                    } else if (opR == '-') {
+                      int newBal = prevBal - CBal;
+                      final newTransaction = Transaction(
+                        operator: opR,
+                        item: _itemController.text,
+                        amount: _amountController.text,
+                        Bal: newBal, //find previous balance here???
+                      );
+                      await _insertTransaction(newTransaction);
+                      await _initializeTotal();
+                      setState(() {
+                        _loadTransactions();
+                        _amountController.clear();
+                        _itemController.clear();
+                      });
+                    }
                   }
-                }
-              },
-              child: Text('save'),
+                },
+                child: Icon(Icons.send_sharp, color: Colors.green),
+              ),
             ),
           ]),
         ),
@@ -239,17 +376,19 @@ class _HomepageState extends State<Homepage> {
 }
 
 class Transaction {
-  final int? id;
-  final String operator;
-  final String item;
-  final String amount;
-  final int Bal;
   Transaction(
       {this.id,
       required this.operator,
       required this.item,
       required this.amount,
       required this.Bal});
+
+  final int Bal;
+  final String amount;
+  final int? id;
+  final String item;
+  final String operator;
+
   Map<String, dynamic> toMap() {
     return {'operator': operator, 'item': item, 'amount': amount, 'Bal': Bal};
   }
