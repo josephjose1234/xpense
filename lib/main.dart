@@ -7,11 +7,13 @@ import 'package:path/path.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Open or create the database when the app starts.
   final database = openDatabase(
     join(await getDatabasesPath(), 'transact.db'),
     onCreate: (db, version) {
+       // Create the 'transact' table if it doesn't exist.
       return db.execute(
-        'CREATE TABLE transact(id INTEGER PRIMARY KEY AUTOINCREMENT , operator text, item TEXT,amount TEXT ,Bal INTEGER)',
+        'CREATE TABLE transact(id INTEGER PRIMARY KEY AUTOINCREMENT , operator text, item TEXT,amount INTEGER )',
       );
     },
     version: 1,
@@ -29,6 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+       debugShowCheckedModeBanner: false,//DebugBanner
       home: SafeArea(
         child: Scaffold(
           body: Homepage(DHome: DBase),
@@ -48,7 +51,7 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
-  int Total = 0;
+  int total = 0;
   List<Transaction> TransList = [];
   String opR = '+';
   Icon OPr = Icon(Icons.add, size: 30);
@@ -59,44 +62,82 @@ class _HomepageState extends State<Homepage> {
   void initState() {
     super.initState();
     _loadTransactions();
-    _initializeTotal();
   }
 
 // Balance
-// getting the last balnce from the database
+// EXtractingBalance
   Future<int> getLastBal(Database db) async {
-    final List<Map<String, dynamic>> result = await db.rawQuery(
-      'SELECT Bal FROM transact ORDER BY id DESC LIMIT 1',
-    );
-
-    if (result.isNotEmpty) {
-      return result.first['Bal'] as int;
-    } else {
-      // Handle the case when the table is empty
-      return 0; // Or another default value that makes sense for your use case
+    final List<Map<String, dynamic>>? results =
+        await db.query('transact', columns: ['operator', 'amount']);
+  if (results == null) {
+    return 0; // or some default value
+  }
+ 
+    // Create two lists to store 'operator' and 'amount'
+    List<String> os = [];
+    List<int> as = [];
+  for (int i = 0; i < results.length; i++) {
+      final String operator = results[i]['operator'] as String;
+      final int amount = results[i]['amount'] as int;
+      // Append the values to their respective lists
+      os.add(operator);
+      as.add(amount);
     }
+ total=0;
+for (int i = 0; i < os.length; i++) {
+      if (os[i] == '+') {
+        total = total + as[i];
+      } else if (os[i] == '-') {
+        total = total - as[i];
+      }
+    };
+      print(os);
+      print(as);
+    return total;
   }
+// Future<int> getLastBal(Database db) async {
+//   int runningTotal = 0;
+//   bool hasResults = true;
 
-  balFunction() async {
-    // assinging the balnce as TOTAl
-    final db = await widget.DHome;
-    Total = await getLastBal(db);
-    return Total;
-  }
+//   int offset = 0;
+//   final int limit = 100; // Adjust this limit based on your data size
 
-  Future<void> _initializeTotal() async {
-    final db = await widget.DHome;
-    Total = await getLastBal(db);
-    // Total = await balFunction();
-    setState(() {});
-  }
+//   while (hasResults) {
+//     final List<Map<String, dynamic>> results = await db.query('transact',
+//         columns: ['operator', 'amount'], limit: limit, offset: offset);
+
+//     if (results.isEmpty) {
+//       hasResults = false;
+//     } else {
+//       for (int i = 0; i < results.length; i++) {
+//         final String operator = results[i]['operator'] as String;
+//         final int amount = results[i]['amount'] as int;
+
+//         if (operator == '+') {
+//           runningTotal += amount;
+//         } else if (operator == '-') {
+//           runningTotal -= amount;
+//         }
+//       }
+
+//       offset += limit;
+//     }
+//   }
+
+//   return runningTotal;
+// }
+
+
+
+
+
 
   // READ operation
   Future<void> _loadTransactions() async {
-    final db = await widget.DHome;
+    final db = await widget.DHome; //getting Database
     final List<Map<String, dynamic>> maps = await db.query('transact');
     print(maps.toString());
-    
+
     setState(() {
       TransList = List.generate(maps.length, (index) {
         return Transaction(
@@ -104,9 +145,12 @@ class _HomepageState extends State<Homepage> {
             operator: maps[index]['operator'],
             item: maps[index]['item'],
             amount: maps[index]['amount'],
-            Bal: maps[index]['Bal']);
+            );
       });
     });
+     
+     total=await getLastBal(db);
+     setState(() {});
   }
 
 // CREATE operation
@@ -117,6 +161,7 @@ class _HomepageState extends State<Homepage> {
       transaction.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+   await  _loadTransactions();
   }
 
 // DELETE operation
@@ -128,8 +173,8 @@ class _HomepageState extends State<Homepage> {
       where: 'id = ?',
       whereArgs: [transToDelete.id],
     );
-    _loadTransactions();
-    balFunction();
+    await _loadTransactions();
+    
   }
 
   @override
@@ -181,7 +226,7 @@ class _HomepageState extends State<Homepage> {
           ),
           child: Center(
             child: Text(
-              '₹ ${Total.toString()}',
+              '₹ ${total.toString()}',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -198,7 +243,7 @@ class _HomepageState extends State<Homepage> {
                 itemBuilder: (context, index) {
                   final transList = TransList[index];
                   return GestureDetector(
-                    onLongPress: () {
+                    onLongPress: () {//DeleteDialog
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
@@ -317,6 +362,7 @@ class _HomepageState extends State<Homepage> {
               child: Container(
                 child: TextField(
                   controller: _amountController,
+                  keyboardType: TextInputType.number,
                   decoration: InputDecoration(labelText: '₹₹₹₹'),
                 ),
               ),
@@ -325,44 +371,22 @@ class _HomepageState extends State<Homepage> {
               margin: EdgeInsets.all(10),
               child: GestureDetector(
                 onTap: () async {
-                  final Database db = await widget.DHome;
-                  int CBal = int.parse(
-                      _amountController.text); //converting text to INT
-                  int prevBal = await getLastBal(db); //gettingLastBalance
-                  // int newBal = prevBal + CBal; //Adding Previous Balance to the Current Balance
                   if (_amountController.text.isNotEmpty ||
                       _itemController.text.isNotEmpty) {
-                    if (opR == '+') {
-                      int newBal = prevBal + CBal;
-                      final newTransaction = Transaction(
-                        operator: opR,
-                        item: _itemController.text,
-                        amount: _amountController.text,
-                        Bal: newBal, //find previous balance here???
-                      );
-                      await _insertTransaction(newTransaction);
-                      await _initializeTotal();
-                      setState(() {
-                        _loadTransactions();
-                        _amountController.clear();
-                        _itemController.clear();
-                      });
-                    } else if (opR == '-') {
-                      int newBal = prevBal - CBal;
-                      final newTransaction = Transaction(
-                        operator: opR,
-                        item: _itemController.text,
-                        amount: _amountController.text,
-                        Bal: newBal, //find previous balance here???
-                      );
-                      await _insertTransaction(newTransaction);
-                      await _initializeTotal();
-                      setState(() {
-                        _loadTransactions();
-                        _amountController.clear();
-                        _itemController.clear();
-                      });
-                    }
+                    int amtInt = int.parse(
+                        _amountController.text); //converting text to INT
+                    final newTransaction = Transaction(
+                      operator: opR,
+                      item: _itemController.text,
+                      amount: amtInt,
+                      //find previous balance here???
+                    );
+                    setState(() {
+                      _insertTransaction(newTransaction);
+                       _loadTransactions();
+                      _amountController.clear();
+                      _itemController.clear();
+                    });
                   }
                 },
                 child: Icon(Icons.send_sharp, color: Colors.green),
@@ -381,15 +405,17 @@ class Transaction {
       required this.operator,
       required this.item,
       required this.amount,
-      required this.Bal});
+      });
 
-  final int Bal;
-  final String amount;
+  
+  final int amount;
   final int? id;
   final String item;
   final String operator;
 
   Map<String, dynamic> toMap() {
-    return {'operator': operator, 'item': item, 'amount': amount, 'Bal': Bal};
+    return {'operator': operator, 'item': item, 'amount': amount, };
   }
 }
+//ForUiLookAtFlutter
+//When send is pressed -insertTransaction get called and inserts the n it calls loadTransaction then it calls getLastBal Function for calculating CumulativeBalance
