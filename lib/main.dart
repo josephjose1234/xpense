@@ -2,25 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-// UPDATE TRANSACTION FEATURE
-//X1X!X!X!!
+import 'package:provider/provider.dart';
 
+// TODO: add dark mode
+// TODO: make a colorScheme
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Open or create the database when the app starts.
   final database = openDatabase(
     join(await getDatabasesPath(), 'transact.db'),
     onCreate: (db, version) {
-       // Create the 'transact' table if it doesn't exist.
+      // Create the 'transact' table if it doesn't exist.
       return db.execute(
         'CREATE TABLE transact(id INTEGER PRIMARY KEY AUTOINCREMENT , operator text, item TEXT,amount INTEGER )',
       );
     },
     version: 1,
   );
-  runApp(MyApp(
-    DBase: database,
-  ));
+//   runApp(MyApp(
+//     DBase: database,
+//   ));
+// }
+ runApp(
+    ChangeNotifierProvider<ThemeProvider>(
+      create: (_) => ThemeProvider(),
+      builder: (context, _) => MyApp(
+        DBase: database,
+      ),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -31,7 +41,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-       debugShowCheckedModeBanner: false,//DebugBanner
+      debugShowCheckedModeBanner: false, //DebugBanner
       home: SafeArea(
         child: Scaffold(
           body: Homepage(DHome: DBase),
@@ -54,7 +64,7 @@ class _HomepageState extends State<Homepage> {
   int total = 0;
   List<Transaction> TransList = [];
   String opR = '+';
-  Icon OPr = Icon(Icons.add, size: 30);
+  Icon OPr = Icon(Icons.add, size: 30, color: Colors.blue);
   TextEditingController _amountController = TextEditingController();
   TextEditingController _itemController = TextEditingController();
 
@@ -69,30 +79,31 @@ class _HomepageState extends State<Homepage> {
   Future<int> getLastBal(Database db) async {
     final List<Map<String, dynamic>>? results =
         await db.query('transact', columns: ['operator', 'amount']);
-  if (results == null) {
-    return 0; // or some default value
-  }
- 
+    if (results == null) {
+      return 0; // or some default value
+    }
+
     // Create two lists to store 'operator' and 'amount'
     List<String> os = [];
     List<int> as = [];
-  for (int i = 0; i < results.length; i++) {
+    for (int i = 0; i < results.length; i++) {
       final String operator = results[i]['operator'] as String;
       final int amount = results[i]['amount'] as int;
       // Append the values to their respective lists
       os.add(operator);
       as.add(amount);
     }
- total=0;
-for (int i = 0; i < os.length; i++) {
+    total = 0;
+    for (int i = 0; i < os.length; i++) {
       if (os[i] == '+') {
         total = total + as[i];
       } else if (os[i] == '-') {
         total = total - as[i];
       }
-    };
-      print(os);
-      print(as);
+    }
+    ;
+    print(os);
+    print(as);
     return total;
   }
 // Future<int> getLastBal(Database db) async {
@@ -126,12 +137,6 @@ for (int i = 0; i < os.length; i++) {
 
 //   return runningTotal;
 // }
-
-
-
-
-
-
   // READ operation
   Future<void> _loadTransactions() async {
     final db = await widget.DHome; //getting Database
@@ -141,16 +146,16 @@ for (int i = 0; i < os.length; i++) {
     setState(() {
       TransList = List.generate(maps.length, (index) {
         return Transaction(
-            id: maps[index]['id'],
-            operator: maps[index]['operator'],
-            item: maps[index]['item'],
-            amount: maps[index]['amount'],
-            );
+          id: maps[index]['id'],
+          operator: maps[index]['operator'],
+          item: maps[index]['item'],
+          amount: maps[index]['amount'],
+        );
       });
     });
-     
-     total=await getLastBal(db);
-     setState(() {});
+
+    total = await getLastBal(db);
+    setState(() {});
   }
 
 // CREATE operation
@@ -161,7 +166,7 @@ for (int i = 0; i < os.length; i++) {
       transaction.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-   await  _loadTransactions();
+    await _loadTransactions();
   }
 
 // DELETE operation
@@ -174,248 +179,312 @@ for (int i = 0; i < os.length; i++) {
       whereArgs: [transToDelete.id],
     );
     await _loadTransactions();
-    
   }
 
   @override
   Widget build(BuildContext context) {
+    
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    // Set system overlay style based on the selected theme
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
+        // statusBarBrightness:
+        //     themeProvider.isDarkMode ? Brightness.light : Brightness.dark,
       ),
     );
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // AppBar
-        Container(
-          margin: EdgeInsets.all(20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(
-                Icons.menu,
-                size: 40,
-                color: Colors.blue,
-              ),
-              Container(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Xpense',
-                  style: TextStyle(
-                    fontSize: 50,
-                    fontWeight: FontWeight.bold,
+    return Scaffold(
+      backgroundColor: themeProvider.isDarkMode
+            ? Colors.black
+            : Color.fromARGB(255, 214, 214, 217),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // AppBar
+          Container(
+            margin: EdgeInsets.all(20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Icon(
+                  Icons.menu,
+                  size: 40,
+                  color: Colors.blue,
+                ),
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    'Xpense',
+                    style: TextStyle(
+                      fontSize: 50,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-              Icon(
-                Icons.search,
-                size: 40,
-                color: Colors.blue,
-              ),
-            ],
+                const Icon(
+                  Icons.search,
+                  size: 40,
+                  color: Colors.blue,
+                ),
+              ],
+            ),
           ),
-        ),
-        Container(
-          width: double.maxFinite,
-          height: 50,
-          margin: EdgeInsets.all(5),
-          decoration: BoxDecoration(
-            color: Color.fromRGBO(0, 0, 255, 0.25),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Center(
-            child: Text(
-              '₹ ${total.toString()}',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+          Container(
+            width: double.maxFinite,
+            height: 50,
+            margin: EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                '₹ ${total.toString()}',
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
-        ),
-
-        //List
-        Expanded(
-            child: ListView.builder(
-                itemCount: TransList.length,
-                itemBuilder: (context, index) {
-                  final transList = TransList[index];
-                  return GestureDetector(
-                    onLongPress: () {//DeleteDialog
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Icon(
-                              Icons.delete,
-                              size: 50,
-                              color: Colors.red,
-                            ),
-                            actions: <Widget>[
-                              TextButton(
+    
+          //List
+          Expanded(
+              child: ListView.builder(
+                  itemCount: TransList.length,
+                  itemBuilder: (context, index) {
+                    final transList = TransList[index];
+                    return GestureDetector(
+                      onLongPress: () {
+                        //DeleteDialog
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              backgroundColor: const Color.fromARGB(255, 63, 62, 62),
+                              title: Icon(
+                                Icons.delete,
+                                size: 50,
+                                color: Colors.red,
+                              ),
+                              actions: <Widget>[
+                                TextButton(
                                   onPressed: () {
                                     Navigator.of(context)
                                         .pop(); // Close the dialog
                                   },
-                                  child: Icon(Icons.close_sharp, size: 30)),
-                              TextButton(
-                                onPressed: () {
-                                  // Delete the transaction here
-                                  _deleteTransaction(index);
-                                  Navigator.of(context)
-                                      .pop(); // Close the dialog
-                                },
-                                child: Icon(Icons.check_rounded, size: 30),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    child: Container(
-                      margin: EdgeInsets.all(5),
-                      padding: EdgeInsets.fromLTRB(25, 5, 5, 5),
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Color.fromRGBO(0, 0, 255, 0.25),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              child: Text(
-                                transList.item,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
+                                  child: Icon(Icons.close_sharp, size: 30),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    // Delete the transaction here
+                                    _deleteTransaction(index);
+                                    Navigator.of(context)
+                                        .pop(); // Close the dialog
+                                  },
+                                  child: Icon(Icons.check_rounded, size: 30),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.all(5),
+                        padding: const EdgeInsets.fromLTRB(25, 5, 5, 5),
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color:
+                              Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                child: Text(
+                                  transList.item,
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 24,
+                                   // fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Container(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    transList.operator,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
+                              Container(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      transList.operator,
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontSize: 24,
+                                       // fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    '${transList.amount} ₹',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
+                                    Text(
+                                      '${transList.amount} ₹',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontSize: 24,
+                                       // fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ]),
-                    ),
-                  );
-                })),
-
-        //addItems
-        Container(
-          height: 50,
-          margin: EdgeInsets.all(5),
-          decoration: BoxDecoration(
-            color: Color.fromRGBO(0, 0, 255, 0.25),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child:
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Container(
-              height: 100,
-              width: 40,
-              margin: EdgeInsets.all(5),
-              child: Center(
-                child: GestureDetector(
-                  child: OPr,
-                  onTap: () {
-                    setState(() {
-                      opR == '+'
-                          ? {opR = '-', OPr = Icon(Icons.remove)}
-                          : {opR = '+', OPr = Icon(Icons.add)};
-                    });
-                  },
-                ),
-              ),
-            ),
-            Expanded(
-              child: Container(
-                child: TextField(
-                  controller: _itemController,
-                  decoration: InputDecoration(labelText: 'item'),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Container(
-                child: TextField(
-                  controller: _amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: '₹₹₹₹'),
-                ),
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.all(10),
-              child: GestureDetector(
-                onTap: () async {
-                  if (_amountController.text.isNotEmpty ||
-                      _itemController.text.isNotEmpty) {
-                    int amtInt = int.parse(
-                        _amountController.text); //converting text to INT
-                    final newTransaction = Transaction(
-                      operator: opR,
-                      item: _itemController.text,
-                      amount: amtInt,
-                      //find previous balance here???
+                            ]),
+                      ),
                     );
-                    setState(() {
-                      _insertTransaction(newTransaction);
-                       _loadTransactions();
-                      _amountController.clear();
-                      _itemController.clear();
-                    });
-                  }
-                },
-                child: Icon(Icons.send_sharp, color: Colors.green),
-              ),
+                  })),
+    
+          //addItems
+          Container(
+            height: 50,
+            margin: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
+              borderRadius: BorderRadius.circular(10),
             ),
-          ]),
-        ),
-      ],
+            child:
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Container(
+                height: 100,
+                width: 40,
+                margin: const EdgeInsets.all(5),
+                child: Center(
+                  child: GestureDetector(
+                    child: OPr,
+                    onTap: () {
+                      setState(() {
+                        opR == '+'
+                            ? {
+                                opR = '-',
+                                OPr = Icon(Icons.remove, color: Colors.blue)
+                              }
+                            : {
+                                opR = '+',
+                                OPr = Icon(Icons.add, color: Colors.blue)
+                              };
+                      });
+                    },
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  child: TextField(
+                    controller: _itemController,
+                    decoration: InputDecoration(
+                      labelText: 'item',
+                      labelStyle: TextStyle(color: Colors.blue),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  child: TextField(
+                    controller: _amountController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: '₹₹₹₹',
+                      labelStyle: TextStyle(color: Colors.blue),
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.all(10),
+                child: GestureDetector(
+                  onTap: () async {
+                    if (_amountController.text.isNotEmpty ||
+                        _itemController.text.isNotEmpty) {
+                      int amtInt = int.parse(
+                          _amountController.text); //converting text to INT
+                      final newTransaction = Transaction(
+                        operator: opR,
+                        item: _itemController.text,
+                        amount: amtInt,
+                        //find previous balance here???
+                      );
+                      setState(() {
+                        _insertTransaction(newTransaction);
+                        _loadTransactions();
+                        _amountController.clear();
+                        _itemController.clear();
+                      });
+                    }
+                  },
+                  child: const Icon(Icons.send_sharp, color: Colors.blue),
+                ),
+              ),
+            ]),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class Transaction {
-  Transaction(
-      {this.id,
-      required this.operator,
-      required this.item,
-      required this.amount,
-      });
+  Transaction({
+    this.id,
+    required this.operator,
+    required this.item,
+    required this.amount,
+  });
 
-  
   final int amount;
   final int? id;
   final String item;
   final String operator;
 
   Map<String, dynamic> toMap() {
-    return {'operator': operator, 'item': item, 'amount': amount, };
+    return {
+      'operator': operator,
+      'item': item,
+      'amount': amount,
+    };
   }
 }
 //ForUiLookAtFlutter
 //When send is pressed -insertTransaction get called and inserts the n it calls loadTransaction then it calls getLastBal Function for calculating CumulativeBalance
+
+
+
+//import 'package:provider/provider.dart';
+//import 'package:flutter/services.dart';
+
+class ThemeProvider with ChangeNotifier {
+  bool _isDarkMode = false;
+
+  ThemeProvider() {
+    // Detect system brightness mode and set the initial theme accordingly
+    final brightness = WidgetsBinding.instance.window.platformBrightness;
+    _isDarkMode = brightness == Brightness.dark;
+  }
+
+  bool get isDarkMode => _isDarkMode;
+
+  ThemeData getThemeData() {
+    return _isDarkMode
+        ? ThemeData.dark().copyWith(
+            scaffoldBackgroundColor:
+                Colors.black, // Set dark mode background color
+          )
+        : ThemeData.light().copyWith(
+            scaffoldBackgroundColor:
+                Colors.white, // Set light mode background color
+          );
+  }
+
+  void toggleTheme() {
+    _isDarkMode = !_isDarkMode;
+    notifyListeners();
+  }
+}
