@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
+import 'package:intl/intl.dart';
 
 // TODO: add dark mode
 // TODO: make a colorScheme
@@ -14,7 +16,7 @@ void main() async {
     onCreate: (db, version) {
       // Create the 'transact' table if it doesn't exist.
       return db.execute(
-        'CREATE TABLE transact(id INTEGER PRIMARY KEY AUTOINCREMENT , operator text, item TEXT,amount INTEGER )',
+        'CREATE TABLE transact(id INTEGER PRIMARY KEY AUTOINCREMENT , operator text, item TEXT,amount INTEGER, DTime TEXT )',
       );
     },
     version: 1,
@@ -23,7 +25,7 @@ void main() async {
 //     DBase: database,
 //   ));
 // }
- runApp(
+  runApp(
     ChangeNotifierProvider<ThemeProvider>(
       create: (_) => ThemeProvider(),
       builder: (context, _) => MyApp(
@@ -150,6 +152,7 @@ class _HomepageState extends State<Homepage> {
           operator: maps[index]['operator'],
           item: maps[index]['item'],
           amount: maps[index]['amount'],
+          DTime: maps[index]['DTime'],
         );
       });
     });
@@ -183,7 +186,6 @@ class _HomepageState extends State<Homepage> {
 
   @override
   Widget build(BuildContext context) {
-    
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     // Set system overlay style based on the selected theme
@@ -196,8 +198,8 @@ class _HomepageState extends State<Homepage> {
     );
     return Scaffold(
       backgroundColor: themeProvider.isDarkMode
-            ? Colors.black
-            : Color.fromARGB(255, 214, 214, 217),
+          ? Colors.black
+          : Color.fromARGB(255, 214, 214, 217),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -250,7 +252,7 @@ class _HomepageState extends State<Homepage> {
               ),
             ),
           ),
-    
+
           //List
           Expanded(
               child: ListView.builder(
@@ -264,7 +266,8 @@ class _HomepageState extends State<Homepage> {
                           context: context,
                           builder: (BuildContext context) {
                             return AlertDialog(
-                              backgroundColor: const Color.fromARGB(255, 63, 62, 62),
+                              backgroundColor:
+                                  const Color.fromARGB(255, 63, 62, 62),
                               title: Icon(
                                 Icons.delete,
                                 size: 50,
@@ -293,55 +296,78 @@ class _HomepageState extends State<Homepage> {
                         );
                       },
                       child: Container(
-                        margin: const EdgeInsets.all(5),
-                        padding: const EdgeInsets.fromLTRB(25, 5, 5, 5),
-                        height: 50,
+                        //for TIME AND DATE
+                        margin: const EdgeInsets.all(7),
+                        height: 80,
                         decoration: BoxDecoration(
-                          color:
-                              Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
+                          color: Color.fromARGB(255, 106, 169, 221)
+                              .withOpacity(0.5),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                child: Text(
-                                  transList.item,
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontSize: 24,
-                                   // fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                        child: Column(
+                          children: [
+                            Container(//Tranactions
+                              margin: const EdgeInsets.all(1),
+                              padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Color.fromARGB(255, 106, 169, 221)
+                                    .withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              Container(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
+                              child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      transList.operator,
-                                      style: TextStyle(
-                                        color: Colors.blue,
-                                        fontSize: 24,
-                                       // fontWeight: FontWeight.bold,
+                                    Container(
+                                      child: Text(
+                                        transList.item,
+                                        style: TextStyle(
+                                          color: Colors.blue,
+                                          fontSize: 24,
+                                          // fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-                                    Text(
-                                      '${transList.amount} ₹',
-                                      style: TextStyle(
-                                        color: Colors.blue,
-                                        fontSize: 24,
-                                       // fontWeight: FontWeight.bold,
+                                    Container(
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            transList.operator,
+                                            style: TextStyle(
+                                              color: Colors.blue,
+                                              fontSize: 24,
+                                              // fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${transList.amount} ₹',
+                                            style: TextStyle(
+                                              color: Colors.blue,
+                                              fontSize: 24,
+                                              // fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ]),
+                            ),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              padding: EdgeInsets.fromLTRB(1, 1, 0, 0),
+                              child: Text(
+                                transList.DTime.toString(),
                               ),
-                            ]),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   })),
-    
+
           //addItems
           Container(
             height: 50,
@@ -350,80 +376,95 @@ class _HomepageState extends State<Homepage> {
               color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
               borderRadius: BorderRadius.circular(10),
             ),
-            child:
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Container(
-                height: 100,
-                width: 40,
-                margin: const EdgeInsets.all(5),
-                child: Center(
-                  child: GestureDetector(
-                    child: OPr,
-                    onTap: () {
-                      setState(() {
-                        opR == '+'
-                            ? {
-                                opR = '-',
-                                OPr = Icon(Icons.remove, color: Colors.blue)
-                              }
-                            : {
-                                opR = '+',
-                                OPr = Icon(Icons.add, color: Colors.blue)
-                              };
-                      });
-                    },
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  child: TextField(
-                    controller: _itemController,
-                    decoration: InputDecoration(
-                      labelText: 'item',
-                      labelStyle: TextStyle(color: Colors.blue),
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    height: 100,
+                    width: 40,
+                    margin: const EdgeInsets.all(5),
+                    child: Center(
+                      child: GestureDetector(
+                        child: OPr,
+                        onTap: () {
+                          setState(() {
+                            opR == '+'
+                                ? {
+                                    opR = '-',
+                                    OPr = Icon(Icons.remove, color: Colors.blue)
+                                  }
+                                : {
+                                    opR = '+',
+                                    OPr = Icon(Icons.add, color: Colors.blue)
+                                  };
+                          });
+                        },
+                      ),
                     ),
                   ),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  child: TextField(
-                    controller: _amountController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: '₹₹₹₹',
-                      labelStyle: TextStyle(color: Colors.blue),
+                  Expanded(
+                    child: Container(
+                      child: TextField(
+                        controller: _itemController,
+                        decoration: InputDecoration(
+                          //labelText: 'item',
+                          hintText: 'itmes',
+                          hintStyle: TextStyle(color: Colors.blue),
+                           
+                          
+                        ),
+                        style: TextStyle(color: Colors.blue),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.all(10),
-                child: GestureDetector(
-                  onTap: () async {
-                    if (_amountController.text.isNotEmpty ||
-                        _itemController.text.isNotEmpty) {
-                      int amtInt = int.parse(
-                          _amountController.text); //converting text to INT
-                      final newTransaction = Transaction(
-                        operator: opR,
-                        item: _itemController.text,
-                        amount: amtInt,
-                        //find previous balance here???
-                      );
-                      setState(() {
-                        _insertTransaction(newTransaction);
-                        _loadTransactions();
-                        _amountController.clear();
-                        _itemController.clear();
-                      });
-                    }
-                  },
-                  child: const Icon(Icons.send_sharp, color: Colors.blue),
-                ),
-              ),
-            ]),
+                  Expanded(
+                    child: Container(
+                      child: TextField(
+                        controller: _amountController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          hintText: '₹₹₹₹',
+                          hintStyle: TextStyle(color: Colors.blue),
+                          labelStyle: TextStyle(color: Colors.blue),
+                        ),
+                         style: TextStyle(color: Colors.blue),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.all(10),
+                    child: GestureDetector(
+                      onTap: () async {
+                        if (_amountController.text.isNotEmpty ||
+                            _itemController.text.isNotEmpty) {
+                          // Get the current date and time as a DateTime object
+                          DateTime currentDateTime = DateTime.now();
+// Create a DateFormat with the desired format
+                          final dateFormat = DateFormat('dd-MM-y HH:mm');
+// Format the DateTime object as a string
+                          String formattedDateTime =
+                              dateFormat.format(currentDateTime);
+                          int amtInt = int.parse(
+                              _amountController.text); //converting text to INT
+                          final newTransaction = Transaction(
+                            operator: opR,
+                            item: _itemController.text,
+                            amount: amtInt,
+                            DTime: formattedDateTime,
+                            //find previous balance here???
+                          );
+                          setState(() {
+                            _insertTransaction(newTransaction);
+                            _loadTransactions();
+                            _amountController.clear();
+                            _itemController.clear();
+                          });
+                        }
+                      },
+                      child: const Icon(Icons.send_sharp, color: Colors.blue),
+                    ),
+                  ),
+                ]),
           ),
         ],
       ),
@@ -437,28 +478,27 @@ class Transaction {
     required this.operator,
     required this.item,
     required this.amount,
+    required this.DTime,
   });
 
   final int amount;
   final int? id;
   final String item;
   final String operator;
+  final String DTime;
 
   Map<String, dynamic> toMap() {
     return {
       'operator': operator,
       'item': item,
       'amount': amount,
+      'DTime': DTime,
     };
   }
 }
 //ForUiLookAtFlutter
 //When send is pressed -insertTransaction get called and inserts the n it calls loadTransaction then it calls getLastBal Function for calculating CumulativeBalance
-
-
-
-//import 'package:provider/provider.dart';
-//import 'package:flutter/services.dart';
+//AddDateStampToTheTransactions
 
 class ThemeProvider with ChangeNotifier {
   bool _isDarkMode = false;
