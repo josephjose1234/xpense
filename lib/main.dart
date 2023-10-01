@@ -54,9 +54,10 @@ class MyApp extends StatelessWidget {
 }
 
 class Homepage extends StatefulWidget {
-  const Homepage({required this.DHome});
+   Homepage({required this.DHome});
 
   final Future<Database> DHome;
+ 
 
   @override
   State<Homepage> createState() => _HomepageState();
@@ -108,37 +109,7 @@ class _HomepageState extends State<Homepage> {
     print(as);
     return total;
   }
-// Future<int> getLastBal(Database db) async {
-//   int runningTotal = 0;
-//   bool hasResults = true;
 
-//   int offset = 0;
-//   final int limit = 100; // Adjust this limit based on your data size
-
-//   while (hasResults) {
-//     final List<Map<String, dynamic>> results = await db.query('transact',
-//         columns: ['operator', 'amount'], limit: limit, offset: offset);
-
-//     if (results.isEmpty) {
-//       hasResults = false;
-//     } else {
-//       for (int i = 0; i < results.length; i++) {
-//         final String operator = results[i]['operator'] as String;
-//         final int amount = results[i]['amount'] as int;
-
-//         if (operator == '+') {
-//           runningTotal += amount;
-//         } else if (operator == '-') {
-//           runningTotal -= amount;
-//         }
-//       }
-
-//       offset += limit;
-//     }
-//   }
-
-//   return runningTotal;
-// }
   // READ operation
   Future<void> _loadTransactions() async {
     final db = await widget.DHome; //getting Database
@@ -225,10 +196,18 @@ class _HomepageState extends State<Homepage> {
                     ),
                   ),
                 ),
-                const Icon(
-                  Icons.search,
-                  size: 40,
-                  color: Colors.blue,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SearchScreen(DSearch: widget.DHome,)),
+                    );
+                  },
+                  child: const Icon(
+                    Icons.search,
+                    size: 40,
+                    color: Colors.blue,
+                  ),
                 ),
               ],
             ),
@@ -306,13 +285,14 @@ class _HomepageState extends State<Homepage> {
                         ),
                         child: Column(
                           children: [
-                            Container(//Tranactions
+                            Container(
+                              //Tranactions
                               margin: const EdgeInsets.all(1),
                               padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
                               height: 50,
                               decoration: BoxDecoration(
-                                color: Color.fromARGB(255, 106, 169, 221)
-                                    .withOpacity(0.3),
+                                // color: Color.fromARGB(255, 106, 169, 221)
+                                //  .withOpacity(0.3),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Row(
@@ -356,10 +336,11 @@ class _HomepageState extends State<Homepage> {
                                   ]),
                             ),
                             Container(
-                              alignment: Alignment.centerLeft,
-                              padding: EdgeInsets.fromLTRB(1, 1, 0, 0),
+                              alignment: Alignment.bottomRight,
+                              padding: EdgeInsets.fromLTRB(0, 1, 5, 0),
                               child: Text(
                                 transList.DTime.toString(),
+                                style: TextStyle(color: Colors.blue),
                               ),
                             ),
                           ],
@@ -410,8 +391,6 @@ class _HomepageState extends State<Homepage> {
                           //labelText: 'item',
                           hintText: 'itmes',
                           hintStyle: TextStyle(color: Colors.blue),
-                           
-                          
                         ),
                         style: TextStyle(color: Colors.blue),
                       ),
@@ -427,7 +406,7 @@ class _HomepageState extends State<Homepage> {
                           hintStyle: TextStyle(color: Colors.blue),
                           labelStyle: TextStyle(color: Colors.blue),
                         ),
-                         style: TextStyle(color: Colors.blue),
+                        style: TextStyle(color: Colors.blue),
                       ),
                     ),
                   ),
@@ -440,7 +419,7 @@ class _HomepageState extends State<Homepage> {
                           // Get the current date and time as a DateTime object
                           DateTime currentDateTime = DateTime.now();
 // Create a DateFormat with the desired format
-                          final dateFormat = DateFormat('dd-MM-y HH:mm');
+                          final dateFormat = DateFormat('MMM,d,y');
 // Format the DateTime object as a string
                           String formattedDateTime =
                               dateFormat.format(currentDateTime);
@@ -528,3 +507,186 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 }
+
+class SearchScreen extends StatefulWidget {
+  final Future<Database> DSearch;
+   SearchScreen({required this.DSearch});
+
+  @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  TextEditingController _searchController=TextEditingController();
+  List<Transaction> TransList = []; 
+  Future<List<Transaction>> _searchTransaction(String searchTerm) async {
+  final Database db = await widget.DSearch;
+  final List<Transaction> searchResults = [];
+
+  // Define your SQL query to search for transactions based on the "items" column
+  final String query = '''
+    SELECT * FROM transact
+    WHERE item LIKE ?
+  ''';
+
+  // Execute the query and pass the search term as a parameter
+  final List<Map<String, dynamic>> results = await db.rawQuery(query, ['%$searchTerm%']);
+
+  // Process the results and populate the searchResults list
+  for (final Map<String, dynamic> row in results) {
+    final transaction = Transaction(
+      id: row['id'],
+      operator: row['operator'],
+      item: row['item'],
+      amount: row['amount'],
+      DTime: row['DTime'],
+    );
+    searchResults.add(transaction);
+  }
+
+  setState(() {
+    TransList = searchResults; // Update TransList with search results
+  });
+
+  return searchResults;
+}
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Scaffold(
+        body: Column(children: [
+          Container(
+            width: double.maxFinite,
+            height: 50,
+            margin: EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                '₹ ',
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          Text('koooi'),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              
+            },
+            child: Text('back'),
+          ),
+                    Expanded(
+              child: ListView.builder(
+                  itemCount: TransList.length,
+                  itemBuilder: (context, index) {
+                    final transList = TransList[index];
+                    return GestureDetector(
+                      onLongPress: () {
+                        //DeleteDialog
+                        
+                      },
+                      child: Container(
+                        //for TIME AND DATE
+                        margin: const EdgeInsets.all(7),
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Color.fromARGB(255, 106, 169, 221)
+                              .withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          children: [
+                            Container(
+                              //Tranactions
+                              margin: const EdgeInsets.all(1),
+                              padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
+                              height: 50,
+                              decoration: BoxDecoration(
+                                // color: Color.fromARGB(255, 106, 169, 221)
+                                //  .withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      child: Text(
+                                        transList.item,
+                                        style: TextStyle(
+                                          color: Colors.blue,
+                                          fontSize: 24,
+                                          // fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            transList.operator,
+                                            style: TextStyle(
+                                              color: Colors.blue,
+                                              fontSize: 24,
+                                              // fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${transList.amount} ₹',
+                                            style: TextStyle(
+                                              color: Colors.blue,
+                                              fontSize: 24,
+                                              // fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ]),
+                            ),
+                            Container(
+                              alignment: Alignment.bottomRight,
+                              padding: EdgeInsets.fromLTRB(0, 1, 5, 0),
+                              child: Text(
+                                transList.DTime.toString(),
+                                style: TextStyle(color: Colors.blue),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  })),
+          Container(
+            // For searchBar
+            margin:EdgeInsets.all(10),
+            padding:EdgeInsets.all(5),
+            decoration: BoxDecoration(color: Colors.blue,
+            borderRadius: BorderRadius.circular(20)
+            ),
+            child: TextField(
+controller: _searchController,
+onChanged: (value) {
+  _searchTransaction(_searchController.text);
+},
+              decoration: InputDecoration(hintText: '  Search...'),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+
+
