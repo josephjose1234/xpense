@@ -179,10 +179,15 @@ class _HomepageState extends State<Homepage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(
-                  Icons.menu,
-                  size: 40,
-                  color: Colors.blue,
+                GestureDetector(
+                  onTap: (){
+                    SystemNavigator.pop();
+                  },
+                  child: const Icon(
+                    Icons.power_settings_new,
+                    size: 40,
+                    color: Colors.blue,
+                  ),
                 ),
                 Container(
                   alignment: Alignment.centerLeft,
@@ -521,6 +526,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   TextEditingController _searchController = TextEditingController();
   List<Transaction> TransList = [];
+  double TotaL=0;
   Future<List<Transaction>> _searchTransaction(String searchTerm) async {
     final Database db = await widget.DSearch;
     final List<Transaction> searchResults = [];
@@ -550,15 +556,72 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {
       TransList = searchResults; // Update TransList with search results
     });
+  // Calculate the sum of amounts
+  double sum = 0.0;
+  for (final transaction in searchResults) {
+    sum += transaction.amount;
+  }
+  setState(() {
+    TotaL=sum;
+  });
 
+  print('Sum of amounts: $sum');
     return searchResults;
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    // Set system overlay style based on the selected theme
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        // statusBarBrightness:
+        //     themeProvider.isDarkMode ? Brightness.light : Brightness.dark,
+      ),
+    );
     return SafeArea(
       child: Scaffold(
+              backgroundColor: themeProvider.isDarkMode
+          ? Colors.black
+          : Color.fromARGB(255, 214, 214, 217),
         body: Column(children: [
+          //forAppBAr
+          Container(
+            margin: EdgeInsets.all(20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Icon(
+                  Icons.menu,
+                  size: 40,
+                  color: Colors.blue,
+                ),
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    'Xpense',
+                    style: TextStyle(
+                      fontSize: 50,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Icon(
+                    Icons.done,
+                    size: 40,
+                    color: Colors.blue,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Container(
             width: double.maxFinite,
             height: 50,
@@ -569,7 +632,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             child: Center(
               child: Text(
-                '₹ ',
+                '₹ ${TotaL.toString()}',
                 style: TextStyle(
                   color: Colors.blue,
                   fontSize: 24,
@@ -578,13 +641,7 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
           ),
-          Text('koooi'),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('back'),
-          ),
+
           Expanded(
               child: ListView.builder(
                   itemCount: TransList.length,
@@ -670,16 +727,23 @@ class _SearchScreenState extends State<SearchScreen> {
                   })),
           Container(
             // For searchBar
-            margin: EdgeInsets.all(10),
-            padding: EdgeInsets.all(5),
+            height: 50,
+            margin: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-                color: Colors.blue, borderRadius: BorderRadius.circular(20)),
+             color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
+              borderRadius: BorderRadius.circular(10),
+            ),
+           // margin: EdgeInsets.all(10),
+            padding: EdgeInsets.all(5),
+           
             child: TextField(
               controller: _searchController,
               onChanged: (value) {
                 _searchTransaction(_searchController.text);
               },
-              decoration: InputDecoration(hintText: '  Search...'),
+              decoration: InputDecoration(hintText: '  Search...', hintStyle: TextStyle(color: Colors.blue),
+                        ),
+                        style: TextStyle(color: Colors.blue),
             ),
           ),
         ]),
