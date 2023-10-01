@@ -54,10 +54,9 @@ class MyApp extends StatelessWidget {
 }
 
 class Homepage extends StatefulWidget {
-   Homepage({required this.DHome});
+  Homepage({required this.DHome});
 
   final Future<Database> DHome;
- 
 
   @override
   State<Homepage> createState() => _HomepageState();
@@ -200,7 +199,10 @@ class _HomepageState extends State<Homepage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => SearchScreen(DSearch: widget.DHome,)),
+                      MaterialPageRoute(
+                          builder: (context) => SearchScreen(
+                                DSearch: widget.DHome,
+                              )),
                     );
                   },
                   child: const Icon(
@@ -510,46 +512,47 @@ class ThemeProvider with ChangeNotifier {
 
 class SearchScreen extends StatefulWidget {
   final Future<Database> DSearch;
-   SearchScreen({required this.DSearch});
+  SearchScreen({required this.DSearch});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  TextEditingController _searchController=TextEditingController();
-  List<Transaction> TransList = []; 
+  TextEditingController _searchController = TextEditingController();
+  List<Transaction> TransList = [];
   Future<List<Transaction>> _searchTransaction(String searchTerm) async {
-  final Database db = await widget.DSearch;
-  final List<Transaction> searchResults = [];
+    final Database db = await widget.DSearch;
+    final List<Transaction> searchResults = [];
 
-  // Define your SQL query to search for transactions based on the "items" column
-  final String query = '''
+    // Define your SQL query to search for transactions based on the "items" column
+    final String query = '''
     SELECT * FROM transact
     WHERE item LIKE ?
   ''';
 
-  // Execute the query and pass the search term as a parameter
-  final List<Map<String, dynamic>> results = await db.rawQuery(query, ['%$searchTerm%']);
+    // Execute the query and pass the search term as a parameter
+    final List<Map<String, dynamic>> results =
+        await db.rawQuery(query, ['%$searchTerm%']);
 
-  // Process the results and populate the searchResults list
-  for (final Map<String, dynamic> row in results) {
-    final transaction = Transaction(
-      id: row['id'],
-      operator: row['operator'],
-      item: row['item'],
-      amount: row['amount'],
-      DTime: row['DTime'],
-    );
-    searchResults.add(transaction);
+    // Process the results and populate the searchResults list
+    for (final Map<String, dynamic> row in results) {
+      final transaction = Transaction(
+        id: row['id'],
+        operator: row['operator'],
+        item: row['item'],
+        amount: row['amount'],
+        DTime: row['DTime'],
+      );
+      searchResults.add(transaction);
+    }
+
+    setState(() {
+      TransList = searchResults; // Update TransList with search results
+    });
+
+    return searchResults;
   }
-
-  setState(() {
-    TransList = searchResults; // Update TransList with search results
-  });
-
-  return searchResults;
-}
 
   @override
   Widget build(BuildContext context) {
@@ -579,11 +582,10 @@ class _SearchScreenState extends State<SearchScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              
             },
             child: Text('back'),
           ),
-                    Expanded(
+          Expanded(
               child: ListView.builder(
                   itemCount: TransList.length,
                   itemBuilder: (context, index) {
@@ -591,7 +593,6 @@ class _SearchScreenState extends State<SearchScreen> {
                     return GestureDetector(
                       onLongPress: () {
                         //DeleteDialog
-                        
                       },
                       child: Container(
                         //for TIME AND DATE
@@ -669,16 +670,15 @@ class _SearchScreenState extends State<SearchScreen> {
                   })),
           Container(
             // For searchBar
-            margin:EdgeInsets.all(10),
-            padding:EdgeInsets.all(5),
-            decoration: BoxDecoration(color: Colors.blue,
-            borderRadius: BorderRadius.circular(20)
-            ),
+            margin: EdgeInsets.all(10),
+            padding: EdgeInsets.all(5),
+            decoration: BoxDecoration(
+                color: Colors.blue, borderRadius: BorderRadius.circular(20)),
             child: TextField(
-controller: _searchController,
-onChanged: (value) {
-  _searchTransaction(_searchController.text);
-},
+              controller: _searchController,
+              onChanged: (value) {
+                _searchTransaction(_searchController.text);
+              },
               decoration: InputDecoration(hintText: '  Search...'),
             ),
           ),
@@ -687,6 +687,3 @@ onChanged: (value) {
     );
   }
 }
-
-
-
