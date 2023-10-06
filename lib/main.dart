@@ -170,290 +170,271 @@ class _HomepageState extends State<Homepage> {
       backgroundColor: themeProvider.isDarkMode
           ? Colors.black
           : Color.fromARGB(255, 214, 214, 217),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
+      body: CustomScrollView(
+        slivers: <Widget>[
           // AppBar
-          Container(
-            margin: EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: (){
-                    SystemNavigator.pop();
-                  },
-                  child: const Icon(
-                    Icons.power_settings_new,
-                    size: 40,
-                    color: Colors.blue,
-                  ),
+          SliverAppBar(
+            backgroundColor:
+                themeProvider.isDarkMode ? Colors.black : Colors.white,
+            expandedHeight: 200.0,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                'Xpense',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
                 ),
-                Container(
-                  alignment: Alignment.centerLeft,
-                  child: const Text(
-                    'Xpense',
+              ),
+              centerTitle: true,
+              background: Container(
+                // Your header content here
+                child: Center(
+                  child: Text(
+                    '₹ ${total.toString()}',
                     style: TextStyle(
-                      fontSize: 50,
                       color: Colors.blue,
+                      fontSize: 36,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => SearchScreen(
-                                DSearch: widget.DHome,
-                              )),
-                    );
-                  },
-                  child: const Icon(
-                    Icons.search,
-                    size: 40,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: double.maxFinite,
-            height: 50,
-            margin: EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Text(
-                '₹ ${total.toString()}',
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
               ),
             ),
           ),
+          // Container(
+          //   width: double.maxFinite,
+          //   height: 50,
+          //   margin: EdgeInsets.all(5),
+          //   decoration: BoxDecoration(
+          //     color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
+          //     borderRadius: BorderRadius.circular(10),
+          //   ),
+          //   child: Center(
+          //     child: Text(
+          //       '₹ ${total.toString()}',
+          //       style: TextStyle(
+          //         color: Colors.blue,
+          //         fontSize: 24,
+          //         fontWeight: FontWeight.bold,
+          //       ),
+          //     ),
+          //   ),
+          // ),
 
           //List
-          Expanded(
-              child: ListView.builder(
-                  itemCount: TransList.length,
-                  itemBuilder: (context, index) {
-                    final transList = TransList[index];
-                    return GestureDetector(
-                      onLongPress: () {
-                        //DeleteDialog
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              backgroundColor:
-                                  const Color.fromARGB(255, 63, 62, 62),
-                              title: Icon(
-                                Icons.delete,
-                                size: 50,
-                                color: Colors.red,
-                              ),
-                              actions: <Widget>[
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context)
-                                        .pop(); // Close the dialog
-                                  },
-                                  child: Icon(Icons.close_sharp, size: 30),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    // Delete the transaction here
-                                    _deleteTransaction(index);
-                                    Navigator.of(context)
-                                        .pop(); // Close the dialog
-                                  },
-                                  child: Icon(Icons.check_rounded, size: 30),
-                                ),
-                              ],
-                            );
-                          },
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              childCount: TransList.length,
+              (BuildContext context, int index) {
+                
+                final transList = TransList[index];
+                return GestureDetector(
+                  onLongPress: () {
+                    //DeleteDialog
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          backgroundColor:
+                              const Color.fromARGB(255, 63, 62, 62),
+                          title: Icon(
+                            Icons.delete,
+                            size: 50,
+                            color: Colors.red,
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(); // Close the dialog
+                              },
+                              child: Icon(Icons.close_sharp, size: 30),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                // Delete the transaction here
+                                _deleteTransaction(index);
+                                Navigator.of(context).pop(); // Close the dialog
+                              },
+                              child: Icon(Icons.check_rounded, size: 30),
+                            ),
+                          ],
                         );
                       },
-                      child: Container(
-                        //for TIME AND DATE
-                        margin: const EdgeInsets.all(7),
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Color.fromARGB(255, 106, 169, 221)
-                              .withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              //Tranactions
-                              margin: const EdgeInsets.all(1),
-                              padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
-                              height: 50,
-                              decoration: BoxDecoration(
-                                // color: Color.fromARGB(255, 106, 169, 221)
-                                //  .withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Container(
-                                      child: Text(
-                                        transList.item,
+                    );
+                  },
+                  child: Container(
+                    //for TIME AND DATE
+                    margin: const EdgeInsets.all(7),
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color:
+                          Color.fromARGB(255, 106, 169, 221).withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          //Tranactions
+                          margin: const EdgeInsets.all(1),
+                          padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
+                          height: 50,
+                          decoration: BoxDecoration(
+                            // color: Color.fromARGB(255, 106, 169, 221)
+                            //  .withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  child: Text(
+                                    transList.item,
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: 24,
+                                      // fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        transList.operator,
                                         style: TextStyle(
                                           color: Colors.blue,
                                           fontSize: 24,
                                           // fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                    ),
-                                    Container(
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            transList.operator,
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: 24,
-                                              // fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Text(
-                                            '${transList.amount} ₹',
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: 24,
-                                              // fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
+                                      Text(
+                                        '${transList.amount} ₹',
+                                        style: TextStyle(
+                                          color: Colors.blue,
+                                          fontSize: 24,
+                                          // fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
-                                  ]),
-                            ),
-                            Container(
-                              alignment: Alignment.bottomRight,
-                              padding: EdgeInsets.fromLTRB(0, 1, 5, 0),
-                              child: Text(
-                                transList.DTime.toString(),
-                                style: TextStyle(color: Colors.blue),
-                              ),
-                            ),
-                          ],
+                                    ],
+                                  ),
+                                ),
+                              ]),
                         ),
-                      ),
-                    );
-                  })),
-
-          //addItems
-          Container(
-            height: 50,
-            margin: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
-              borderRadius: BorderRadius.circular(10),
+                        Container(
+                          alignment: Alignment.bottomRight,
+                          padding: EdgeInsets.fromLTRB(0, 1, 5, 0),
+                          child: Text(
+                            transList.DTime.toString(),
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    height: 100,
-                    width: 40,
-                    margin: const EdgeInsets.all(5),
-                    child: Center(
-                      child: GestureDetector(
-                        child: OPr,
-                        onTap: () {
-                          setState(() {
-                            opR == '+'
-                                ? {
-                                    opR = '-',
-                                    OPr = Icon(Icons.remove, color: Colors.blue)
-                                  }
-                                : {
-                                    opR = '+',
-                                    OPr = Icon(Icons.add, color: Colors.blue)
-                                  };
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      child: TextField(
-                        controller: _itemController,
-                        decoration: InputDecoration(
-                          //labelText: 'item',
-                          hintText: 'itmes',
-                          hintStyle: TextStyle(color: Colors.blue),
-                        ),
-                        style: TextStyle(color: Colors.blue),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      child: TextField(
-                        controller: _amountController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: '₹₹₹₹',
-                          hintStyle: TextStyle(color: Colors.blue),
-                          labelStyle: TextStyle(color: Colors.blue),
-                        ),
-                        style: TextStyle(color: Colors.blue),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.all(10),
-                    child: GestureDetector(
-                      onTap: () async {
-                        if (_amountController.text.isNotEmpty ||
-                            _itemController.text.isNotEmpty) {
-                          // Get the current date and time as a DateTime object
-                          DateTime currentDateTime = DateTime.now();
-// Create a DateFormat with the desired format
-                          final dateFormat = DateFormat('MMM,d,y');
-// Format the DateTime object as a string
-                          String formattedDateTime =
-                              dateFormat.format(currentDateTime);
-                          int amtInt = int.parse(
-                              _amountController.text); //converting text to INT
-                          final newTransaction = Transaction(
-                            operator: opR,
-                            item: _itemController.text,
-                            amount: amtInt,
-                            DTime: formattedDateTime,
-                            //find previous balance here???
-                          );
-                          setState(() {
-                            _insertTransaction(newTransaction);
-                            _loadTransactions();
-                            _amountController.clear();
-                            _itemController.clear();
-                          });
-                        }
-                      },
-                      child: const Icon(Icons.send_sharp, color: Colors.blue),
-                    ),
-                  ),
-                ]),
           ),
         ],
       ),
+   bottomNavigationBar: Container(
+              height: 50,
+              margin: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      height: 100,
+                      width: 40,
+                      margin: const EdgeInsets.all(5),
+                      child: Center(
+                        child: GestureDetector(
+                          child: OPr,
+                          onTap: () {
+                            setState(() {
+                              opR == '+'
+                                  ? {
+                                      opR = '-',
+                                      OPr = Icon(Icons.remove, color: Colors.blue)
+                                    }
+                                  : {
+                                      opR = '+',
+                                      OPr = Icon(Icons.add, color: Colors.blue)
+                                    };
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        child: TextField(
+                          controller: _itemController,
+                          decoration: InputDecoration(
+                            //labelText: 'item',
+                            hintText: 'itmes',
+                            hintStyle: TextStyle(color: Colors.blue),
+                          ),
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        child: TextField(
+                          controller: _amountController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: '₹₹₹₹',
+                            hintStyle: TextStyle(color: Colors.blue),
+                            labelStyle: TextStyle(color: Colors.blue),
+                          ),
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.all(10),
+                      child: GestureDetector(
+                        onTap: () async {
+                          if (_amountController.text.isNotEmpty ||
+                              _itemController.text.isNotEmpty) {
+                            // Get the current date and time as a DateTime object
+                            DateTime currentDateTime = DateTime.now();
+          // Create a DateFormat with the desired format
+                            final dateFormat = DateFormat('MMM,d,y');
+          // Format the DateTime object as a string
+                            String formattedDateTime =
+                                dateFormat.format(currentDateTime);
+                            int amtInt = int.parse(
+                                _amountController.text); //converting text to INT
+                            final newTransaction = Transaction(
+                              operator: opR,
+                              item: _itemController.text,
+                              amount: amtInt,
+                              DTime: formattedDateTime,
+                              //find previous balance here???
+                            );
+                            setState(() {
+                              _insertTransaction(newTransaction);
+                              _loadTransactions();
+                              _amountController.clear();
+                              _itemController.clear();
+                            });
+                          }
+                        },
+                        child: const Icon(Icons.send_sharp, color: Colors.blue),
+                      ),
+                    ),
+                  ]),
+            ),
     );
   }
 }
@@ -526,7 +507,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   TextEditingController _searchController = TextEditingController();
   List<Transaction> TransList = [];
-  double TotaL=0;
+  double TotaL = 0;
   Future<List<Transaction>> _searchTransaction(String searchTerm) async {
     final Database db = await widget.DSearch;
     final List<Transaction> searchResults = [];
@@ -556,16 +537,16 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {
       TransList = searchResults; // Update TransList with search results
     });
-  // Calculate the sum of amounts
-  double sum = 0.0;
-  for (final transaction in searchResults) {
-    sum += transaction.amount;
-  }
-  setState(() {
-    TotaL=sum;
-  });
+    // Calculate the sum of amounts
+    double sum = 0.0;
+    for (final transaction in searchResults) {
+      sum += transaction.amount;
+    }
+    setState(() {
+      TotaL = sum;
+    });
 
-  print('Sum of amounts: $sum');
+    print('Sum of amounts: $sum');
     return searchResults;
   }
 
@@ -583,9 +564,9 @@ class _SearchScreenState extends State<SearchScreen> {
     );
     return SafeArea(
       child: Scaffold(
-              backgroundColor: themeProvider.isDarkMode
-          ? Colors.black
-          : Color.fromARGB(255, 214, 214, 217),
+        backgroundColor: themeProvider.isDarkMode
+            ? Colors.black
+            : Color.fromARGB(255, 214, 214, 217),
         body: Column(children: [
           //forAppBAr
           Container(
@@ -730,20 +711,22 @@ class _SearchScreenState extends State<SearchScreen> {
             height: 50,
             margin: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-             color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
+              color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
               borderRadius: BorderRadius.circular(10),
             ),
-           // margin: EdgeInsets.all(10),
+            // margin: EdgeInsets.all(10),
             padding: EdgeInsets.all(5),
-           
+
             child: TextField(
               controller: _searchController,
               onChanged: (value) {
                 _searchTransaction(_searchController.text);
               },
-              decoration: InputDecoration(hintText: '  Search...', hintStyle: TextStyle(color: Colors.blue),
-                        ),
-                        style: TextStyle(color: Colors.blue),
+              decoration: InputDecoration(
+                hintText: '  Search...',
+                hintStyle: TextStyle(color: Colors.blue),
+              ),
+              style: TextStyle(color: Colors.blue),
             ),
           ),
         ]),
