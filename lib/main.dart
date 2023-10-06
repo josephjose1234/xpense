@@ -63,10 +63,11 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
-  int total = 0;
+  Icon OPr = Icon(Icons.add, size: 30, color: Colors.blue);
   List<Transaction> TransList = [];
   String opR = '+';
-  Icon OPr = Icon(Icons.add, size: 30, color: Colors.blue);
+  int total = 0;
+
   TextEditingController _amountController = TextEditingController();
   TextEditingController _itemController = TextEditingController();
 
@@ -176,59 +177,64 @@ class _HomepageState extends State<Homepage> {
           SliverAppBar(
             backgroundColor:
                 themeProvider.isDarkMode ? Colors.black : Colors.white,
-            expandedHeight: 200.0,
+            expandedHeight: 150.0,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                'Xpense',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-              centerTitle: true,
-              background: Container(
-                // Your header content here
-                child: Center(
-                  child: Text(
-                    '₹ ${total.toString()}',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                    ),
+              title: Container(
+                child: Text(
+                  '₹ ${total.toString()}',
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
+              centerTitle: true,
             ),
           ),
-          // Container(
-          //   width: double.maxFinite,
-          //   height: 50,
-          //   margin: EdgeInsets.all(5),
-          //   decoration: BoxDecoration(
-          //     color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
-          //     borderRadius: BorderRadius.circular(10),
-          //   ),
-          //   child: Center(
-          //     child: Text(
-          //       '₹ ${total.toString()}',
-          //       style: TextStyle(
-          //         color: Colors.blue,
-          //         fontSize: 24,
-          //         fontWeight: FontWeight.bold,
-          //       ),
-          //     ),
-          //   ),
-          // ),
-
+          SliverToBoxAdapter(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Text(
+                    'Transactions',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            SearchScreen(DSearch: widget.DHome),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.only(right: 30),
+                    child: Icon(
+                      Icons.search_sharp,
+                      color: Colors.blue,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           //List
           SliverList(
             delegate: SliverChildBuilderDelegate(
               childCount: TransList.length,
               (BuildContext context, int index) {
-                
                 final transList = TransList[index];
                 return GestureDetector(
                   onLongPress: () {
@@ -340,101 +346,99 @@ class _HomepageState extends State<Homepage> {
           ),
         ],
       ),
-   bottomNavigationBar: Container(
-              height: 50,
-              margin: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      height: 100,
-                      width: 40,
-                      margin: const EdgeInsets.all(5),
-                      child: Center(
-                        child: GestureDetector(
-                          child: OPr,
-                          onTap: () {
-                            setState(() {
-                              opR == '+'
-                                  ? {
-                                      opR = '-',
-                                      OPr = Icon(Icons.remove, color: Colors.blue)
-                                    }
-                                  : {
-                                      opR = '+',
-                                      OPr = Icon(Icons.add, color: Colors.blue)
-                                    };
-                            });
-                          },
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        child: TextField(
-                          controller: _itemController,
-                          decoration: InputDecoration(
-                            //labelText: 'item',
-                            hintText: 'itmes',
-                            hintStyle: TextStyle(color: Colors.blue),
-                          ),
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        child: TextField(
-                          controller: _amountController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            hintText: '₹₹₹₹',
-                            hintStyle: TextStyle(color: Colors.blue),
-                            labelStyle: TextStyle(color: Colors.blue),
-                          ),
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.all(10),
-                      child: GestureDetector(
-                        onTap: () async {
-                          if (_amountController.text.isNotEmpty ||
-                              _itemController.text.isNotEmpty) {
-                            // Get the current date and time as a DateTime object
-                            DateTime currentDateTime = DateTime.now();
-          // Create a DateFormat with the desired format
-                            final dateFormat = DateFormat('MMM,d,y');
-          // Format the DateTime object as a string
-                            String formattedDateTime =
-                                dateFormat.format(currentDateTime);
-                            int amtInt = int.parse(
-                                _amountController.text); //converting text to INT
-                            final newTransaction = Transaction(
-                              operator: opR,
-                              item: _itemController.text,
-                              amount: amtInt,
-                              DTime: formattedDateTime,
-                              //find previous balance here???
-                            );
-                            setState(() {
-                              _insertTransaction(newTransaction);
-                              _loadTransactions();
-                              _amountController.clear();
-                              _itemController.clear();
-                            });
+      bottomNavigationBar: Container(
+        height: 50,
+        margin: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child:
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Container(
+            height: 100,
+            width: 40,
+            margin: const EdgeInsets.all(5),
+            child: Center(
+              child: GestureDetector(
+                child: OPr,
+                onTap: () {
+                  setState(() {
+                    opR == '+'
+                        ? {
+                            opR = '-',
+                            OPr = Icon(Icons.remove, color: Colors.blue)
                           }
-                        },
-                        child: const Icon(Icons.send_sharp, color: Colors.blue),
-                      ),
-                    ),
-                  ]),
+                        : {
+                            opR = '+',
+                            OPr = Icon(Icons.add, color: Colors.blue)
+                          };
+                  });
+                },
+              ),
             ),
+          ),
+          Expanded(
+            child: Container(
+              child: TextField(
+                controller: _itemController,
+                decoration: InputDecoration(
+                  //labelText: 'item',
+                  hintText: 'itmes',
+                  hintStyle: TextStyle(color: Colors.blue),
+                ),
+                style: TextStyle(color: Colors.blue),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              child: TextField(
+                controller: _amountController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: '₹₹₹₹',
+                  hintStyle: TextStyle(color: Colors.blue),
+                  labelStyle: TextStyle(color: Colors.blue),
+                ),
+                style: TextStyle(color: Colors.blue),
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.all(10),
+            child: GestureDetector(
+              onTap: () async {
+                if (_amountController.text.isNotEmpty ||
+                    _itemController.text.isNotEmpty) {
+                  // Get the current date and time as a DateTime object
+                  DateTime currentDateTime = DateTime.now();
+                  // Create a DateFormat with the desired format
+                  final dateFormat = DateFormat('MMM,d,y');
+                  // Format the DateTime object as a string
+                  String formattedDateTime = dateFormat.format(currentDateTime);
+                  int amtInt = int.parse(
+                      _amountController.text); //converting text to INT
+                  final newTransaction = Transaction(
+                    operator: opR,
+                    item: _itemController.text,
+                    amount: amtInt,
+                    DTime: formattedDateTime,
+                    //find previous balance here???
+                  );
+                  setState(() {
+                    _insertTransaction(newTransaction);
+                    _loadTransactions();
+                    _amountController.clear();
+                    _itemController.clear();
+                  });
+                }
+              },
+              child: const Icon(Icons.send_sharp, color: Colors.blue),
+            ),
+          ),
+        ]),
+      ),
     );
   }
 }
@@ -448,11 +452,11 @@ class Transaction {
     required this.DTime,
   });
 
+  final String DTime;
   final int amount;
   final int? id;
   final String item;
   final String operator;
-  final String DTime;
 
   Map<String, dynamic> toMap() {
     return {
@@ -468,13 +472,13 @@ class Transaction {
 //AddDateStampToTheTransactions
 
 class ThemeProvider with ChangeNotifier {
-  bool _isDarkMode = false;
-
   ThemeProvider() {
     // Detect system brightness mode and set the initial theme accordingly
     final brightness = WidgetsBinding.instance.window.platformBrightness;
     _isDarkMode = brightness == Brightness.dark;
   }
+
+  bool _isDarkMode = false;
 
   bool get isDarkMode => _isDarkMode;
 
@@ -497,17 +501,20 @@ class ThemeProvider with ChangeNotifier {
 }
 
 class SearchScreen extends StatefulWidget {
-  final Future<Database> DSearch;
   SearchScreen({required this.DSearch});
+
+  final Future<Database> DSearch;
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  TextEditingController _searchController = TextEditingController();
-  List<Transaction> TransList = [];
   double TotaL = 0;
+  List<Transaction> TransList = [];
+
+  TextEditingController _searchController = TextEditingController();
+
   Future<List<Transaction>> _searchTransaction(String searchTerm) async {
     final Database db = await widget.DSearch;
     final List<Transaction> searchResults = [];
