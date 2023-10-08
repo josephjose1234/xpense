@@ -574,169 +574,148 @@ class _SearchScreenState extends State<SearchScreen> {
         backgroundColor: themeProvider.isDarkMode
             ? Colors.black
             : Color.fromARGB(255, 214, 214, 217),
-        body: Column(children: [
-          //forAppBAr
-          Container(
-            margin: EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Icon(
-                  Icons.menu,
-                  size: 40,
-                  color: Colors.blue,
-                ),
-                Container(
-                  alignment: Alignment.centerLeft,
-                  child: const Text(
-                    'Xpense',
+        body: CustomScrollView(
+          slivers: <Widget>[
+            // AppBar
+            SliverAppBar(
+              backgroundColor:
+                  themeProvider.isDarkMode ? Colors.black : Colors.white,
+              expandedHeight: 150.0,
+              pinned: true,
+              flexibleSpace: FlexibleSpaceBar(
+                title: Container(
+                  child: Text(
+                    '₹ ${TotaL.toString()}',
                     style: TextStyle(
-                      fontSize: 50,
                       color: Colors.blue,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Icon(
-                    Icons.done,
-                    size: 40,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: double.maxFinite,
-            height: 50,
-            margin: EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Text(
-                '₹ ${TotaL.toString()}',
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                centerTitle: true,
               ),
             ),
-          ),
-
-          Expanded(
-              child: ListView.builder(
-                  itemCount: TransList.length,
-                  itemBuilder: (context, index) {
-                    final transList = TransList[index];
-                    return GestureDetector(
-                      onLongPress: () {
-                        //DeleteDialog
-                      },
-                      child: Container(
-                        //for TIME AND DATE
-                        margin: const EdgeInsets.all(7),
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Color.fromARGB(255, 106, 169, 221)
-                              .withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              //Tranactions
-                              margin: const EdgeInsets.all(1),
-                              padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
-                              height: 50,
-                              decoration: BoxDecoration(
-                                // color: Color.fromARGB(255, 106, 169, 221)
-                                //  .withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Container(
-                                      child: Text(
-                                        transList.item,
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontSize: 24,
-                                          // fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            transList.operator,
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: 24,
-                                              // fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Text(
-                                            '${transList.amount} ₹',
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: 24,
-                                              // fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ]),
-                            ),
-                            Container(
-                              alignment: Alignment.bottomRight,
-                              padding: EdgeInsets.fromLTRB(0, 1, 5, 0),
-                              child: Text(
-                                transList.DTime.toString(),
-                                style: TextStyle(color: Colors.blue),
-                              ),
-                            ),
-                          ],
-                        ),
+            SliverToBoxAdapter(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: EdgeInsets.only(left: 20),
+                    child: Text(
+                      'Transactions',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
                       ),
-                    );
-                  })),
-          Container(
-            // For searchBar
-            height: 50,
-            margin: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            // margin: EdgeInsets.all(10),
-            padding: EdgeInsets.all(5),
-
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                _searchTransaction(_searchController.text);
-              },
-              decoration: InputDecoration(
-                hintText: '  Search...',
-                hintStyle: TextStyle(color: Colors.blue),
+                    ),
+                  ),
+                ],
               ),
-              style: TextStyle(color: Colors.blue),
             ),
+            //List
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                childCount: TransList.length,
+                (BuildContext context, int index) {
+                  final transList = TransList[index];
+                  return Container(
+                    //for TIME AND DATE
+                    margin: const EdgeInsets.all(7),
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color:
+                          Color.fromARGB(255, 106, 169, 221).withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          //Tranactions
+                          margin: const EdgeInsets.all(1),
+                          padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
+                          height: 50,
+                          decoration: BoxDecoration(
+                            // color: Color.fromARGB(255, 106, 169, 221)
+                            //  .withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                child: Text(
+                                  transList.item,
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 24,
+                                    // fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      transList.operator,
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontSize: 24,
+                                        // fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${transList.amount} ₹',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontSize: 24,
+                                        // fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          alignment: Alignment.bottomRight,
+                          padding: EdgeInsets.fromLTRB(0, 1, 5, 0),
+                          child: Text(
+                            transList.DTime.toString(),
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: Container(
+          height: 50,
+          margin: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: Color.fromARGB(255, 106, 169, 221).withOpacity(0.3),
+            borderRadius: BorderRadius.circular(10),
           ),
-        ]),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              //labelText: 'item',
+              hintText: 'itmes',
+              hintStyle: TextStyle(color: Colors.blue),
+            ),
+            style: TextStyle(color: Colors.blue),
+            onChanged: (text) {
+              _searchTransaction(text);
+            },
+          ),
+        ),
       ),
     );
   }
