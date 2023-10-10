@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common/sqlite_api.dart' as sqflite;
 import 'dataModel.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
 import 'package:intl/intl.dart';
 import 'searchScreen.dart';
 import 'theme.dart';
