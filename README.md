@@ -10,7 +10,9 @@ Using sQflite for Data Presistance
 
 ## Archetecture
 
-main
-SeacrchScreen
+main - Has Main Function ,Homescreen.
+SeacrchScreen-Aa name Suggests.
+Theme-DarkMode.
+DataModel-As Name Suggests.
 
 
