@@ -4,7 +4,13 @@ Easily Record daily expenses.
 Search feature.
 Dark Mode.
 
-## Archetecture
+## Design
 
 Using sQflite for Data Presistance
+
+## Archetecture
+
+main
+SeacrchScreen
+
 
