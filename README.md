@@ -15,4 +15,8 @@ SeacrchScreen-Aa name Suggests.
 Theme-DarkMode.
 DataModel-As Name Suggests.
 
+## Future
+
+Implement Tags,Financial Analysis,Advanced Color SChemes
+
 
