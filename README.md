@@ -2,7 +2,7 @@
 
 Easily Record daily expenses.
 Search feature.
-Dark MOde
+Dark Mode.
 
 ## Archetecture
 
